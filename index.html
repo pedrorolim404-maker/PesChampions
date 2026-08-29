@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>eFootball Championship Manager</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+    <style>
+        :root {
+            --bg-dark: #0a0b10;
+            --panel-bg: #141722;
+            --accent-neon: #00ff88;
+            --accent-blue: #00e5ff;
+            --text-main: #ffffff;
+            --text-muted: #8a99ad;
+            --danger: #ff4757;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: var(--bg-dark); color: var(--text-main); padding: 20px; }
+
+        header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid var(--accent-neon); padding-bottom: 10px; }
+        header h1 { color: var(--accent-neon); text-transform: uppercase; letter-spacing: 2px; text-shadow: 0 0 10px rgba(0,255,136,0.3); }
+
+        .container { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: 1fr; gap: 20px; }
+        
+        .nav-tabs { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; }
+        .tab-btn { background: var(--panel-bg); border: 1px solid var(--accent-blue); color: #fff; padding: 10px 20px; cursor: pointer; border-radius: 5px; font-weight: bold; }
+        .tab-btn.active { background: var(--accent-blue); color: #000; }
+
+        .section-panel { background: var(--panel-bg); padding: 20px; border-radius: 8px; display: none; border: 1px solid #2a3142; }
+        .section-panel.active { display: block; }
+
+        h2 { color: var(--accent-blue); margin-bottom: 15px; }
+
+        form { display: grid; gap: 15px; max-width: 500px; }
+        .input-group { display: flex; flex-direction: column; gap: 5px; }
+        input, select, button { padding: 10px; border-radius: 4px; border: 1px solid #3a445d; background: #0b0d14; color: #fff; }
+        button { background: var(--accent-neon); color: #000; font-weight: bold; border: none; cursor: pointer; transition: 0.2s; }
+        button:hover { opacity: 0.9; transform: scale(1.02); }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { padding: 12px; text-align: center; border-bottom: 1px solid #2a3142; }
+        th { background-color: #1e2333; color: var(--accent-neon); }
+
+        .team-logo { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; vertical-align: middle; margin-right: 8px; }
+        
+        .match-card { background: #1a1e2d; padding: 15px; border-radius: 6px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+        .match-teams { display: flex; align-items: center; gap: 10px; }
+        .score-input { width: 50px; text-align: center; font-size: 1.1em; font-weight: bold; }
+
+        .bracket { display: flex; flex-direction: column; gap: 20px; }
+        .bracket-round { background: #1a1e2d; padding: 15px; border-radius: 8px; }
+
+        .champion-box { text-align: center; padding: 30px; background: linear-gradient(45deg, #141722, #1e2333); border: 2px solid var(--accent-neon); border-radius: 10px; }
+        .trophy { font-size: 80px; animation: bounce 1.5s infinite alternate; }
+
+        @keyframes bounce {
+            from { transform: translateY(0); }
+            to { transform: translateY(-15px); }
+        }
+
+        .actions-bar { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>eFootball Championship Manager</h1>
+    </header>
+
+    <div class="container">
+        <div class="nav-tabs">
+            <button class="tab-btn active" onclick="switchTab('teams')">Equipes & Jogadores</button>
+            <button class="tab-btn" onclick="switchTab('table')">Classificação</button>
+            <button class="tab-btn" onclick="switchTab('matches')">Jogos</button>
+            <button class="tab-btn" onclick="switchTab('playoffs')">Mata-Mata</button>
+            <button class="tab-btn" onclick="switchTab('stats')">Estatísticas</button>
+        </div>
+
+        <div id="teams" class="section-panel active">
+            <h2>Cadastrar Equipe e Jogador</h2>
+            <form id="team-form">
+                <div class="input-group">
+                    <label>Nome do Jogador</label>
+                    <input type="text" id="player-name" required placeholder="Ex: Lucas">
+                </div>
+                <div class="input-group">
+                    <label>Nome do Time</label>
+                    <input type="text" id="team-name" required placeholder="Ex: Barcelona">
+                </div>
+                <div class="input-group">
+                    <label>Escudo do Time (Logo URL ou Imagem)</label>
+                    <input type="file" id="team-logo-file" accept="image/*">
+                </div>
+                <button type="submit">Adicionar Equipe</button>
+            </form>
+
+            <h3 style="margin-top: 20px;">Equipes Inscritas (<span id="team-count">0</span>)</h3>
+            <table id="registered-teams-table">
+                <thead>
+                    <tr>
+                        <th>Escudo</th>
+                        <th>Time</th>
+                        <th>Jogador</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+            <br>
+            <button onclick="startChampionship()" style="background: var(--accent-blue);">Iniciar Campeonato (Gerar Tabela)</button>
+        </div>
+
+        <div id="table" class="section-panel">
+            <h2>Tabela de Classificação</h2>
+            <div class="actions-bar">
+                <button onclick="exportPDF()">Exportar PDF</button>
+                <button onclick="shareWhatsApp()">Compartilhar WhatsApp</button>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Pos</th>
+                        <th>Time/Jogador</th>
+                        <th>J</th>
+                        <th>V</th>
+                        <th>E</th>
+                        <th>D</th>
+                        <th>GP</th>
+                        <th>GC</th>
+                        <th>SG</th>
+                        <th>Pts</th>
+                    </tr>
+                </thead>
+                <tbody id="standings-body"></tbody>
+            </table>
+        </div>
+
+        <div id="matches" class="section-panel">
+            <h2>Rodadas do Campeonato</h2>
+            <div id="rounds-container"></div>
+        </div>
+
+        <div id="playoffs" class="section-panel">
+            <h2>Fase Final (Mata-Mata)</h2>
+            <button onclick="generatePlayoffs()" style="margin-bottom: 15px;">Gerar Chaveamento de Quartas</button>
+            
+            <div id="champion-display"></div>
+
+            <div class="bracket">
+                <div class="bracket-round">
+                    <h3>Quartas de Final</h3>
+                    <div id="qf-matches"></div>
+                </div>
+                <div class="bracket-round">
+                    <h3>Semifinais</h3>
+                    <div id="sf-matches"></div>
+                </div>
+                <div class="bracket-round">
+                    <h3>Disputa de 3º Lugar & Final</h3>
+                    <div id="final-matches"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="stats" class="section-panel">
+            <h2>Estatísticas Gerais</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                <div class="match-card">
+                    <div><strong>Melhor Ataque:</strong> <p id="best-attack">-</p></div>
+                </div>
+                <div class="match-card">
+                    <div><strong>Melhor Defesa:</strong> <p id="best-defense">-</p></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let teams = [];
+        let matches = [];
+        let playoffMatches = { qf: [], sf: [], final: [], third: [] };
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.section-panel').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        // CADASTRO DE EQUIPES
+        document.getElementById('team-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const playerName = document.getElementById('player-name').value;
+            const teamName = document.getElementById('team-name').value;
+            const logoInput = document.getElementById('team-logo-file');
+            
+            let logoUrl = 'https://via.placeholder.com/30';
+            
+            if (logoInput.files && logoInput.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    addTeam(playerName, teamName, e.target.result);
+                }
+                reader.readAsDataURL(logoInput.files[0]);
+            } else {
+                addTeam(playerName, teamName, logoUrl);
+            }
+        });
+
+        function addTeam(player, team, logo) {
+            teams.push({
+                id: teams.length,
+                player,
+                team,
+                logo,
+                pj: 0, v: 0, e: 0, d: 0, gp: 0, gc: 0, sg: 0, pts: 0
+            });
+            updateTeamList();
+            document.getElementById('team-form').reset();
+        }
+
+        function updateTeamList() {
+            document.getElementById('team-count').innerText = teams.length;
+            const tbody = document.querySelector('#registered-teams-table tbody');
+            tbody.innerHTML = '';
+            teams.forEach(t => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td><img src="${t.logo}" class="team-logo"></td>
+                        <td>${t.team}</td>
+                        <td>${t.player}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        // GERAR JOGOS (PONTOS CORRIDOS)
+        function startChampionship() {
+            if (teams.length < 2) {
+                alert('Cadastre pelo menos 2 equipes!');
+                return;
+            }
+            matches = [];
+            // Gerador simples de rodadas (round-robin)
+            for (let i = 0; i < teams.length; i++) {
+                for (let j = i + 1; j < teams.length; j++) {
+                    matches.push({
+                        id: matches.length,
+                        home: teams[i].id,
+                        away: teams[j].id,
+                        homeScore: null,
+                        awayScore: null
+                    });
+                }
+            }
+            renderMatches();
+            updateStandings();
+            switchTab('table');
+        }
+
+        function renderMatches() {
+            const container = document.getElementById('rounds-container');
+            container.innerHTML = '';
+            matches.forEach((m, idx) => {
+                const homeTeam = teams.find(t => t.id === m.home);
+                const awayTeam = teams.find(t => t.id === m.away);
+
+                container.innerHTML += `
+                    <div class="match-card">
+                        <div class="match-teams">
+                            <img src="${homeTeam.logo}" class="team-logo">
+                            <span>${homeTeam.team} (${homeTeam.player})</span>
+                        </div>
+                        <div>
+                            <input type="number" class="score-input" value="${m.homeScore !== null ? m.homeScore : ''}" onchange="updateScore(${idx}, 'home', this.value)">
+                            x
+                            <input type="number" class="score-input" value="${m.awayScore !== null ? m.awayScore : ''}" onchange="updateScore(${idx}, 'away', this.value)">
+                        </div>
+                        <div class="match-teams">
+                            <span>${awayTeam.team} (${awayTeam.player})</span>
+                            <img src="${awayTeam.logo}" class="team-logo">
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function updateScore(matchIdx, type, value) {
+            val = value === '' ? null : parseInt(value);
+            if (type === 'home') matches[matchIdx].homeScore = val;
+            else matches[matchIdx].awayScore = val;
+
+            updateStandings();
+        }
+
+        // CÁLCULO DA TABELA
+        function updateStandings() {
+            teams.forEach(t => {
+                t.pj = 0; t.v = 0; t.e = 0; t.d = 0; t.gp = 0; t.gc = 0; t.sg = 0; t.pts = 0;
+            });
+
+            matches.forEach(m => {
+                if (m.homeScore !== null && m.awayScore !== null) {
+                    const home = teams.find(t => t.id === m.home);
+                    const away = teams.find(t => t.id === m.away);
+
+                    home.pj++; away.pj++;
+                    home.gp += m.homeScore; away.gp += m.awayScore;
+                    home.gc += m.awayScore; away.gc += m.homeScore;
+                    home.sg = home.gp - home.gc; away.sg = away.gp - away.gc;
+
+                    if (m.homeScore > m.awayScore) {
+                        home.v++; home.pts += 3;
+                        away.d++;
+                    } else if (m.homeScore < m.awayScore) {
+                        away.v++; away.pts += 3;
+                        home.d++;
+                    } else {
+                        home.e++; home.pts += 1;
+                        away.e++; away.pts += 1;
+                    }
+                }
+            });
+
+            // Ordenação: Pontos > Saldos > Gols Pró > Vitórias
+            teams.sort((a, b) => b.pts - a.pts || b.sg - a.sg || b.gp - a.gp || b.v - a.v);
+
+            renderStandings();
+            updateStats();
+        }
+
+        function renderStandings() {
+            const tbody = document.getElementById('standings-body');
+            tbody.innerHTML = '';
+            teams.forEach((t, i) => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${i + 1}º</td>
+                        <td style="text-align: left;"><img src="${t.logo}" class="team-logo"> ${t.team} (${t.player})</td>
+                        <td>${t.pj}</td>
+                        <td>${t.v}</td>
+                        <td>${t.e}</td>
+                        <td>${t.d}</td>
+                        <td>${t.gp}</td>
+                        <td>${t.gc}</td>
+                        <td>${t.sg}</td>
+                        <td><strong>${t.pts}</strong></td>
+                    </tr>
+                `;
+            });
+        }
+
+        // MATA-MATA AUTO (TOP 8)
+        function generatePlayoffs() {
+            if (teams.length < 8) {
+                alert("São necessários pelo menos 8 participantes cadastrados para criar as quartas de final.");
+                return;
+            }
+            playoffMatches.qf = [
+                { id: 1, t1: teams[0], t2: teams[7], s1: null, s2: null },
+                { id: 2, t1: teams[1], t2: teams[6], s1: null, s2: null },
+                { id: 3, t1: teams[2], t2: teams[5], s1: null, s2: null },
+                { id: 4, t1: teams[3], t2: teams[4], s1: null, s2: null },
+            ];
+            renderPlayoffs();
+        }
+
+        function renderPlayoffs() {
+            const qfContainer = document.getElementById('qf-matches');
+            qfContainer.innerHTML = '';
+            playoffMatches.qf.forEach((m, idx) => {
+                qfContainer.innerHTML += createPlayoffCard(m, 'qf', idx);
+            });
+        }
+
+        function createPlayoffCard(m, stage, idx) {
+            return `
+                <div class="match-card">
+                    <div><img src="${m.t1.logo}" class="team-logo"> ${m.t1.team}</div>
+                    <div>
+                        <input type="number" class="score-input" value="${m.s1 !== null ? m.s1 : ''}" onchange="updatePlayoffScore('${stage}', ${idx}, 1, this.value)">
+                        x
+                        <input type="number" class="score-input" value="${m.s2 !== null ? m.s2 : ''}" onchange="updatePlayoffScore('${stage}', ${idx}, 2, this.value)">
+                    </div>
+                    <div><img src="${m.t2.logo}" class="team-logo"> ${m.t2.team}</div>
+                </div>
+            `;
+        }
+
+        function updatePlayoffScore(stage, idx, teamNum, val) {
+            const score = val === '' ? null : parseInt(val);
+            if (teamNum === 1) playoffMatches[stage][idx].s1 = score;
+            else playoffMatches[stage][idx].s2 = score;
+
+            if (stage === 'qf') checkQFProgress();
+        }
+
+        function checkQFProgress() {
+            const allDone = playoffMatches.qf.every(m => m.s1 !== null && m.s2 !== null && m.s1 !== m.s2);
+            if (allDone && playoffMatches.sf.length === 0) {
+                const getWinner = m => m.s1 > m.s2 ? m.t1 : m.t2;
+                playoffMatches.sf = [
+                    { id: 1, t1: getWinner(playoffMatches.qf[0]), t2: getWinner(playoffMatches.qf[3]), s1: null, s2: null },
+                    { id: 2, t1: getWinner(playoffMatches.qf[1]), t2: getWinner(playoffMatches.qf[2]), s1: null, s2: null }
+                ];
+                renderSF();
+            }
+        }
+
+        function renderSF() {
+            const sfContainer = document.getElementById('sf-matches');
+            sfContainer.innerHTML = '';
+            playoffMatches.sf.forEach((m, idx) => {
+                sfContainer.innerHTML += createPlayoffCard(m, 'sf', idx);
+            });
+        }
+
+        // ESTATÍSTICAS
+        function updateStats() {
+            if (teams.length === 0) return;
+            const sortedByAttack = [...teams].sort((a,b) => b.gp - a.gp);
+            const sortedByDef = [...teams].sort((a,b) => a.gc - b.gc);
+
+            document.getElementById('best-attack').innerText = `${sortedByAttack[0].team} (${sortedByAttack[0].gp} gols)`;
+            document.getElementById('best-defense').innerText = `${sortedByDef[0].team} (${sortedByDef[0].gc} gols sofridos)`;
+        }
+
+        // EXPORTAR PDF E WHATSAPP
+        function exportPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            doc.text("Tabela eFootball Championship Manager", 10, 10);
+            doc.autoTable({ html: 'table' });
+            doc.save('tabela-efootball.pdf');
+        }
+
+        function shareWhatsApp() {
+            let text = "*Tabela eFootball Championship Manager*\n\n";
+            teams.forEach((t, i) => {
+                text += `${i+1}º ${t.team} - ${t.pts} pts (${t.v}V / SG: ${t.sg})\n`;
+            });
+            window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
+        }
+    </script>
+</body>
+</html>
