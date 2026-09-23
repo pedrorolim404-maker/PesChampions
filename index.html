@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>eFootball Championship Manager</title>
+    <title>eFootball Championship Manager v2</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
     <style>
@@ -18,12 +18,12 @@
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body { background-color: var(--bg-dark); color: var(--text-main); padding: 10px; }
+        body { background-color: var(--bg-dark); color: var(--text-main); padding: 12px; }
 
         header { text-align: center; margin-bottom: 15px; border-bottom: 2px solid var(--accent-neon); padding-bottom: 10px; }
         header h1 { color: var(--accent-neon); text-transform: uppercase; letter-spacing: 1px; font-size: 1.5rem; text-shadow: 0 0 10px rgba(0,255,136,0.3); }
 
-        .config-box { background: #1a1e2d; padding: 12px; border-radius: 8px; margin-bottom: 15px; border: 1px solid var(--accent-blue); font-size: 0.9rem; }
+        .config-box { background: #1a1e2d; padding: 12px; border-radius: 12px; margin-bottom: 15px; border: 1px solid var(--accent-blue); font-size: 0.9rem; }
         .config-box div { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
         .config-box input { flex: 1; min-width: 140px; }
 
@@ -32,8 +32,484 @@
         .page.active { display: block; }
 
         .nav-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 15px; }
-        .tab-btn { background: var(--panel-bg); border: 1px solid var(--accent-blue); color: #fff; padding: 10px 15px; cursor: pointer; border-radius: 5px; font-weight: bold; flex: 1; min-width: 120px; text-align: center; font-size: 0.85rem; }
+        .tab-btn { background: var(--panel-bg); border: 1px solid var(--accent-blue); color: #fff; padding: 10px 15px; cursor: pointer; border-radius: 8px; font-weight: bold; flex: 1; min-width: 110px; text-align: center; font-size: 0.85rem; }
         .tab-btn.active { background: var(--accent-blue); color: #000; }
+
+        .section-panel { background: var(--panel-bg); padding: 18px; border-radius: 12px; border: 1px solid #2a3142; margin-bottom: 15px; box-shadow: 0 8px 32px rgba(0,0,0,0.4); }
+        .sub-panel { display: none; }
+        .sub-panel.active { display: block; }
+
+        h2 { color: var(--accent-blue); margin-bottom: 15px; font-size: 1.2rem; }
+
+        form { display: grid; gap: 12px; max-width: 500px; }
+        .input-group { display: flex; flex-direction: column; gap: 5px; }
+        input, select, button { padding: 10px; border-radius: 8px; border: 1px solid #3a445d; background: #0b0d14; color: #fff; font-size: 0.9rem; }
+        input[type="file"] { background: #1a1e2d; cursor: pointer; }
+        button { background: var(--accent-neon); color: #000; font-weight: bold; border: none; cursor: pointer; transition: 0.2s; }
+        button:hover { opacity: 0.9; }
+        .btn-danger { background: var(--danger); color: #fff; }
+
+        .table-wrapper { width: 100%; overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; min-width: 550px; }
+        th, td { padding: 12px 10px; text-align: center; border-bottom: 1px solid #2a3142; font-size: 0.85rem; }
+        th { background-color: #1e2333; color: var(--accent-neon); }
+
+        /* DESTAQUE G8 (primeiras 8 linhas com borda lateral neon) */
+        #standings-body tr:nth-child(-n+8) {
+            border-left: 3px solid var(--accent-neon);
+            background: rgba(0,255,136,0.03);
+        }
+
+        .team-logo { width: 26px; height: 26px; border-radius: 50%; object-fit: cover; vertical-align: middle; margin-right: 6px; background-color: #2a3142; }
+        
+        /* CARROSSEL DE RODADAS */
+        .round-nav-header { display: flex; justify-content: space-between; align-items: center; background: #1e2333; padding: 10px 14px; border-radius: 8px; margin-bottom: 12px; flex-wrap: wrap; gap: 8px; }
+        .round-nav-header button { background: var(--accent-blue); color: #000; padding: 6px 12px; font-size: 0.8rem; }
+        .round-title-wrapper { display: flex; align-items: center; gap: 8px; }
+        .round-title { color: var(--accent-neon); font-weight: bold; font-size: 1rem; }
+        .badge-done { background: rgba(0,255,136,0.2); color: var(--accent-neon); border: 1px solid var(--accent-neon); font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; }
+
+        .match-card { background: #1a1e2d; padding: 12px; border-radius: 10px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 0.85rem; border: 1px solid transparent; transition: 0.2s; }
+        .match-card.completed { border-color: rgba(0,255,136,0.3); }
+        .match-teams { display: flex; align-items: center; gap: 6px; flex: 1; }
+        .match-teams.away { justify-content: flex-end; text-align: right; }
+        .score-input { width: 50px; text-align: center; font-size: 1.1rem; font-weight: 700; padding: 4px; border-radius: 6px; }
+        .score-input:focus { outline: none; box-shadow: 0 0 8px rgba(0, 229, 255, 0.4); border-color: var(--accent-blue); }
+
+        .playoff-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; }
+        .playoff-card { background: #1a1e2d; border: 1px solid var(--accent-blue); padding: 14px; border-radius: 12px; }
+
+        .actions-bar { display: flex; gap: 8px; margin-bottom: 15px; flex-wrap: wrap; }
+        .status-badge { display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 0.75em; font-weight: bold; margin-left: 5px; }
+        .status-online { background: #00ff8822; color: var(--accent-neon); border: 1px solid var(--accent-neon); }
+        .status-error { background: #ff475722; color: var(--danger); border: 1px solid var(--danger); }
+        .counter-badge { background: var(--accent-blue); color: #000; padding: 2px 8px; border-radius: 12px; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>eFootball Championship</h1>
+    </header>
+
+    <div class="container">
+        <!-- Nuvem -->
+        <div class="config-box">
+            <h3>Sincronização Online <span id="sync-status" class="status-badge status-online">Conectando...</span></h3>
+            <div>
+                <input type="text" id="cfg-bin-id" placeholder="Bin ID">
+                <input type="password" id="cfg-key" placeholder="Master Key">
+                <button onclick="saveConfig()">Reconectar</button>
+            </div>
+        </div>
+
+        <!-- PÁGINA 1: CADASTRO -->
+        <div id="page-registration" class="page active">
+            <div class="section-panel">
+                <h2>Inscrição de Equipes (<span id="team-count" class="counter-badge">0/12</span>)</h2>
+                <form id="team-form">
+                    <div class="input-group">
+                        <label>Nome do Jogador</label>
+                        <input type="text" id="player-name" required placeholder="Ex: Carlos">
+                    </div>
+                    <div class="input-group">
+                        <label>Nome do Time</label>
+                        <input type="text" id="team-name" required placeholder="Ex: Flamengo">
+                    </div>
+                    <div class="input-group">
+                        <label>Escudo do Time (Imagem)</label>
+                        <input type="file" id="team-logo-file" accept="image/*" required>
+                    </div>
+                    <button type="submit" id="btn-submit">Cadastrar Time</button>
+                </form>
+
+                <h3 style="margin-top: 20px;">Times Inscritos</h3>
+                <div class="table-wrapper">
+                    <table id="registered-teams-table">
+                        <thead><tr><th>Escudo</th><th>Time</th><th>Jogador</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+
+                <div style="margin-top: 15px;">
+                    <button onclick="toggleTournamentView()" style="background: var(--accent-blue); color: #000;">Ver Campeonato (Painel)</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- PÁGINA 2: CAMPEONATO -->
+        <div id="page-championship" class="page">
+            <div class="nav-tabs">
+                <button class="tab-btn active" onclick="switchSubTab('table', event)">Classificação</button>
+                <button class="tab-btn" onclick="switchSubTab('matches', event)">Rodadas</button>
+                <button class="tab-btn" onclick="switchSubTab('playoffs', event)">Mata-Mata</button>
+                <button class="tab-btn" onclick="switchSubTab('stats', event)">Estatísticas</button>
+                <button class="tab-btn" onclick="toggleTournamentView()" style="background: #3a445d; color: #fff;">+ Adicionar Times</button>
+            </div>
+
+            <!-- Classificação com Aproveitamento (%) -->
+            <div id="sub-table" class="section-panel sub-panel active">
+                <h2>Tabela de Classificação (G8 Destacado + %)</h2>
+                <div class="actions-bar">
+                    <button onclick="exportPDF()">PDF</button>
+                    <button onclick="shareWhatsApp()">WhatsApp</button>
+                    <button onclick="resetChampionship()" class="btn-danger">Reiniciar Campeonato</button>
+                </div>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr><th>Pos</th><th>Time/Jogador</th><th>J</th><th>V</th><th>E</th><th>D</th><th>GP</th><th>GC</th><th>SG</th><th>Pts</th><th>%</th></tr>
+                        </thead>
+                        <tbody id="standings-body"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Rodadas com Status de Conclusão -->
+            <div id="sub-matches" class="section-panel sub-panel">
+                <h2>Rodadas do Campeonato</h2>
+                <div class="round-nav-header">
+                    <button onclick="changeRound(-1)">❮ Anterior</button>
+                    <div class="round-title-wrapper">
+                        <span id="round-indicator" class="round-title">RODADA 1 / 11</span>
+                        <span id="round-badge" class="badge-done" style="display: none;">Concluída ✓</span>
+                    </div>
+                    <button onclick="changeRound(1)">Próxima ❯</button>
+                </div>
+                <div id="rounds-container"></div>
+            </div>
+
+            <!-- Mata-Mata -->
+            <div id="sub-playoffs" class="section-panel sub-panel">
+                <h2>Chaveamento Mata-Mata</h2>
+                <div class="playoff-container" id="playoff-container"></div>
+            </div>
+
+            <!-- Estatísticas -->
+            <div id="sub-stats" class="section-panel sub-panel">
+                <h2>Estatísticas Gerais</h2>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px;">
+                    <div class="match-card"><div><strong>Melhor Ataque:</strong> <p id="best-attack">-</p></div></div>
+                    <div class="match-card"><div><strong>Melhor Defesa:</strong> <p id="best-defense">-</p></div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let dbState = { teams: [], rounds: [], playoffs: [], started: false };
+        let currentRoundIndex = 0;
+        const defaultBinId = '6a92efb8da38895dfe20357a';
+        const defaultApiKey = '$2a$10$8QwnIuFQDaT9M0T5epqbAuhI1NnNE5Y7Kw52Znl/PEYRYRtI4A/UC';
+
+        let binId = localStorage.getItem('ef_bin_id') || defaultBinId;
+        let apiKey = localStorage.getItem('ef_api_key') || defaultApiKey;
+        document.getElementById('cfg-bin-id').value = binId;
+        document.getElementById('cfg-key').value = apiKey;
+        let syncTimeout = null;
+
+        function updateSyncStatus(text, isError = false) {
+            const badge = document.getElementById('sync-status');
+            badge.innerText = text;
+            badge.className = isError ? 'status-badge status-error' : 'status-badge status-online';
+        }
+
+        function saveConfig() {
+            binId = document.getElementById('cfg-bin-id').value.trim();
+            apiKey = document.getElementById('cfg-key').value.trim();
+            localStorage.setItem('ef_bin_id', binId);
+            localStorage.setItem('ef_api_key', apiKey);
+            loadCloudData();
+        }
+
+        async function syncToCloud() {
+            if (!binId || !apiKey) return;
+            try {
+                updateSyncStatus('Salvando...');
+                const res = await fetch(`https://api.jsonbin.io/v3/b/${binId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'X-Master-Key': apiKey },
+                    body: JSON.stringify(dbState)
+                });
+                if (res.ok) updateSyncStatus('Sincronizado');
+                else updateSyncStatus('Erro ao Salvar', true);
+            } catch (e) { updateSyncStatus('Erro de Conexão', true); }
+        }
+
+        function debouncedSyncToCloud() {
+            clearTimeout(syncTimeout);
+            syncTimeout = setTimeout(() => { syncToCloud(); }, 800);
+        }
+
+        async function loadCloudData() {
+            if (!binId || !apiKey) return;
+            try {
+                const res = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, { headers: { 'X-Master-Key': apiKey } });
+                const data = await res.json();
+                if (data.record) {
+                    dbState = data.record;
+                    dbState.teams = dbState.teams || [];
+                    dbState.rounds = dbState.rounds || [];
+                    dbState.playoffs = dbState.playoffs || [];
+                    updateUI();
+                    updateSyncStatus('Sincronizado');
+                }
+            } catch (e) { updateSyncStatus('Erro de Conexão', true); }
+        }
+
+        function processImageFile(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = (event) => {
+                    const img = new Image();
+                    img.src = event.target.result;
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        canvas.width = 80; canvas.height = 80;
+                        canvas.getContext('2d').drawImage(img, 0, 0, 80, 80);
+                        resolve(canvas.toDataURL('image/png'));
+                    };
+                    img.onerror = reject;
+                };
+                reader.onerror = reject;
+            });
+        }
+
+        document.getElementById('team-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            if (dbState.teams.length >= 12) { alert('Limite de 12 equipes!'); return; }
+            const submitBtn = document.getElementById('btn-submit');
+            submitBtn.disabled = true;
+            try {
+                const player = document.getElementById('player-name').value;
+                const team = document.getElementById('team-name').value;
+                const fileInput = document.getElementById('team-logo-file');
+                const logoBase64 = await processImageFile(fileInput.files[0]);
+                dbState.teams.push({ id: Date.now(), player, team, logo: logoBase64, pj: 0, v: 0, e: 0, d: 0, gp: 0, gc: 0, sg: 0, pts: 0 });
+                document.getElementById('team-form').reset();
+                if (dbState.teams.length >= 2) generate11Rounds();
+                await syncToCloud();
+                updateUI();
+            } catch (err) { alert('Erro na imagem.'); }
+            finally { submitBtn.disabled = false; }
+        });
+
+        function generate11Rounds() {
+            if (dbState.teams.length < 2) return;
+            dbState.rounds = [];
+            let teams = [...dbState.teams.map(t => t.id)];
+            if (teams.length % 2 !== 0) teams.push('BYE');
+            const totalRounds = teams.length - 1;
+            for (let r = 0; r < totalRounds; r++) {
+                let roundMatches = [];
+                for (let i = 0; i < teams.length / 2; i++) {
+                    const home = teams[i], away = teams[teams.length - 1 - i];
+                    if (home !== 'BYE' && away !== 'BYE') roundMatches.push({ home, away, homeScore: null, awayScore: null });
+                }
+                dbState.rounds.push({ roundNumber: r + 1, matches: roundMatches });
+                teams.splice(1, 0, teams.pop());
+            }
+        }
+
+        function toggleTournamentView() {
+            dbState.started = !dbState.started;
+            if (dbState.started && dbState.teams.length >= 2) generate11Rounds();
+            updateUI();
+        }
+
+        function changeRound(direction) {
+            if (!dbState.rounds.length) return;
+            currentRoundIndex += direction;
+            if (currentRoundIndex < 0) currentRoundIndex = 0;
+            if (currentRoundIndex >= dbState.rounds.length) currentRoundIndex = dbState.rounds.length - 1;
+            renderRoundsHTML('rounds-container');
+        }
+
+        async function updateScore(roundIdx, matchIdx, type, value) {
+            const val = value === '' ? null : parseInt(value);
+            if (type === 'home') dbState.rounds[roundIdx].matches[matchIdx].homeScore = val;
+            else dbState.rounds[roundIdx].matches[matchIdx].awayScore = val;
+            updateStandings();
+            debouncedSyncToCloud();
+            renderRoundsHTML('rounds-container');
+        }
+
+        async function updatePlayoffScore(matchIdx, type, value) {
+            const val = value === '' ? null : parseInt(value);
+            if (type === 'home') dbState.playoffs[matchIdx].homeScore = val;
+            else dbState.playoffs[matchIdx].awayScore = val;
+            debouncedSyncToCloud();
+        }
+
+        function updateStandings() {
+            if (!dbState.teams) return;
+            dbState.teams.forEach(t => { t.pj = 0; t.v = 0; t.e = 0; t.d = 0; t.gp = 0; t.gc = 0; t.sg = 0; t.pts = 0; });
+            dbState.rounds.forEach(r => {
+                r.matches.forEach(m => {
+                    if (m.homeScore !== null && m.awayScore !== null) {
+                        const home = dbState.teams.find(t => t.id === m.home);
+                        const away = dbState.teams.find(t => t.id === m.away);
+                        if (home && away) {
+                            home.pj++; away.pj++;
+                            home.gp += m.homeScore; away.gp += m.awayScore;
+                            home.gc += m.awayScore; away.gc += m.homeScore;
+                            home.sg = home.gp - home.gc; away.sg = away.gp - away.gc;
+                            if (m.homeScore > m.awayScore) { home.v++; home.pts += 3; away.d++; }
+                            else if (m.homeScore < m.awayScore) { away.v++; away.pts += 3; home.d++; }
+                            else { home.e++; home.pts += 1; away.e++; away.pts += 1; }
+                        }
+                    }
+                });
+            });
+            dbState.teams.sort((a, b) => b.pts - a.pts || b.sg - a.sg || b.gp - a.gp || b.v - a.v);
+            generatePlayoffs();
+        }
+
+        function generatePlayoffs() {
+            if (dbState.teams.length < 8) return;
+            const matchesDef = [
+                { title: "Jogo 1 (1º vs 8º)", home: dbState.teams[0], away: dbState.teams[7] },
+                { title: "Jogo 2 (2º vs 7º)", home: dbState.teams[1], away: dbState.teams[6] },
+                { title: "Jogo 3 (3º vs 6º)", home: dbState.teams[2], away: dbState.teams[5] },
+                { title: "Jogo 4 (4º vs 5º)", home: dbState.teams[3], away: dbState.teams[4] }
+            ];
+            if (!dbState.playoffs || dbState.playoffs.length === 0) {
+                dbState.playoffs = matchesDef.map(m => ({ title: m.title, homeId: m.home.id, awayId: m.away.id, homeScore: null, awayScore: null }));
+            } else {
+                matchesDef.forEach((m, idx) => {
+                    dbState.playoffs[idx].title = m.title;
+                    dbState.playoffs[idx].homeId = m.home.id;
+                    dbState.playoffs[idx].awayId = m.away.id;
+                });
+            }
+        }
+
+        function switchSubTab(subTabId, evt) {
+            document.querySelectorAll('.sub-panel').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(`sub-${subTabId}`).classList.add('active');
+            if (evt) evt.target.classList.add('active');
+        }
+
+        function renderRoundsHTML(containerId) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+            if (!dbState.rounds.length) return;
+            if (currentRoundIndex >= dbState.rounds.length) currentRoundIndex = 0;
+            const r = dbState.rounds[currentRoundIndex];
+            
+            // Verifica se rodada está 100% concluída
+            const allDone = r.matches.every(m => m.homeScore !== null && m.awayScore !== null);
+            document.getElementById('round-indicator').innerText = `RODADA ${currentRoundIndex + 1} / ${dbState.rounds.length}`;
+            document.getElementById('round-badge').style.display = allDone ? 'inline-block' : 'none';
+
+            let html = '';
+            r.matches.forEach((m, mIdx) => {
+                const h = dbState.teams.find(t => t.id === m.home), a = dbState.teams.find(t => t.id === m.away);
+                if (h && a) {
+                    const isDone = m.homeScore !== null && m.awayScore !== null;
+                    html += `<div class="match-card ${isDone ? 'completed' : ''}">
+                        <div class="match-teams"><img src="${h.logo}" class="team-logo"><span>${h.team}</span></div>
+                        <div>
+                            <input type="number" min="0" class="score-input" value="${m.homeScore ?? ''}" oninput="updateScore(${currentRoundIndex}, ${mIdx}, 'home', this.value)"> x 
+                            <input type="number" min="0" class="score-input" value="${m.awayScore ?? ''}" oninput="updateScore(${currentRoundIndex}, ${mIdx}, 'away', this.value)">
+                        </div>
+                        <div class="match-teams away"><span>${a.team}</span><img src="${a.logo}" class="team-logo"></div>
+                    </div>`;
+                }
+            });
+            container.innerHTML = html;
+        }
+
+        function renderPlayoffsHTML(containerId) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+            dbState.playoffs.forEach((p, pIdx) => {
+                const h = dbState.teams.find(t => t.id === p.homeId), a = dbState.teams.find(t => t.id === p.awayId);
+                if (h && a) {
+                    container.innerHTML += `<div class="playoff-card">
+                        <strong>${p.title}</strong>
+                        <div class="match-card" style="margin-top: 10px;">
+                            <div class="match-teams"><img src="${h.logo}" class="team-logo"><span>${h.team}</span></div>
+                            <div>
+                                <input type="number" min="0" class="score-input" value="${p.homeScore ?? ''}" oninput="updatePlayoffScore(${pIdx}, 'home', this.value)"> x 
+                                <input type="number" min="0" class="score-input" value="${p.awayScore ?? ''}" oninput="updatePlayoffScore(${pIdx}, 'away', this.value)">
+                            </div>
+                            <div class="match-teams away"><span>${a.team}</span><img src="${a.logo}" class="team-logo"></div>
+                        </div>
+                    </div>`;
+                }
+            });
+        }
+
+        function updateUI() {
+            document.getElementById('page-registration').classList.toggle('active', !dbState.started);
+            document.getElementById('page-championship').classList.toggle('active', dbState.started);
+            document.getElementById('team-count').innerText = `${dbState.teams.length}/12`;
+
+            const tbodyTeams = document.querySelector('#registered-teams-table tbody');
+            tbodyTeams.innerHTML = '';
+            dbState.teams.forEach(t => {
+                tbodyTeams.innerHTML += `<tr><td><img src="${t.logo}" class="team-logo"></td><td>${t.team}</td><td>${t.player}</td></tr>`;
+            });
+
+            updateStandings();
+            const tbodyStandings = document.getElementById('standings-body');
+            tbodyStandings.innerHTML = '';
+            dbState.teams.forEach((t, i) => {
+                // Cálculo de aproveitamento (%)
+                const maxPossible = t.pj * 3;
+                const aprov = maxPossible > 0 ? ((t.pts / maxPossible) * 100).toFixed(1) : '0.0';
+                tbodyStandings.innerHTML += `<tr>
+                    <td>${i + 1}º</td><td style="text-align: left;"><img src="${t.logo}" class="team-logo"> ${t.team} (${t.player})</td>
+                    <td>${t.pj}</td><td>${t.v}</td><td>${t.e}</td><td>${t.d}</td><td>${t.gp}</td><td>${t.gc}</td><td>${t.sg}</td><td><strong>${t.pts}</strong></td><td>${aprov}%</td>
+                </tr>`;
+            });
+
+            if (dbState.started) {
+                renderRoundsHTML('rounds-container');
+                renderPlayoffsHTML('playoff-container');
+            }
+
+            if (dbState.teams.length > 0) {
+                const sortedAttack = [...dbState.teams].sort((a,b) => b.gp - a.gp);
+                const sortedDefense = [...dbState.teams].sort((a,b) => a.gc - b.gc);
+                document.getElementById('best-attack').innerText = `${sortedAttack[0].team} (${sortedAttack[0].gp} gols)`;
+                document.getElementById('best-defense').innerText = `${sortedDefense[0].team} (${sortedDefense[0].gc} sofridos)`;
+            }
+        }
+
+        async function resetChampionship() {
+            if (confirm('Deseja realmente apagar todos os dados do campeonato?')) {
+                dbState = { teams: [], rounds: [], playoffs: [], started: false };
+                await syncToCloud();
+                updateUI();
+            }
+        }
+
+        function exportPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            doc.text("Tabela eFootball Championship", 10, 10);
+            doc.autoTable({ html: '#sub-table table' });
+            doc.save('tabela-efootball.pdf');
+        }
+
+        function shareWhatsApp() {
+            let text = "*Tabela eFootball Championship*\n\n";
+            dbState.teams.forEach((t, i) => {
+                const aprov = t.pj > 0 ? ((t.pts / (t.pj * 3)) * 100).toFixed(0) : 0;
+                text += `${i+1}º ${t.team} - ${t.pts} pts (${aprov}%)\n`;
+            });
+            window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
+        }
+
+        loadCloudData();
+        setInterval(loadCloudData, 15000);
+    </script>
+</body>
+</html>
 
         .section-panel { background: var(--panel-bg); padding: 15px; border-radius: 8px; border: 1px solid #2a3142; margin-bottom: 15px; }
         .sub-panel { display: none; }
