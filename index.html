@@ -1,130 +1,284 @@
 <!DOCTYPE html>
-<html lang="pt">
+<html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>eFootball Championship Manager</title>
-    <!-- Bibliotecas externas para PDF -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
-    
-    <style>
-        /* === VARIÁVEIS E RESET GLOBAL === */
-        :root {
-            --bg-dark: #0a0b10;
-            --panel-bg: #141722;
-            --accent-neon: #00ff88;
-            --accent-blue: #00e5ff;
-            --text-main: #ffffff;
-            --danger: #ff4757;
-        }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, sans-serif; }
-        body { background-color: var(--bg-dark); color: var(--text-main); padding: 10px; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>eFootball Championship Manager</title>
 
-        /* === LAYOUT MOBILE-FIRST DOS CARDS DE PARTIDA === */
-        .match-card {
-            background: #1a1e2d;
-            padding: 10px;
-            border-radius: 8px;
-            margin-bottom: 8px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 6px;
-            font-size: 0.8rem;
-            border: 1px solid rgba(255,255,136,0.05);
-        }
-        .match-teams { display: flex; align-items: center; gap: 6px; flex: 1; min-width: 0; }
-        .match-teams.away { justify-content: flex-end; text-align: right; }
-        .team-logo { width: 22px; height: 22px; border-radius: 50%; object-fit: cover; }
-        
-        .score-box { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
-        .score-input { width: 38px; text-align: center; font-weight: bold; padding: 4px; border-radius: 4px; border: 1px solid #3a445d; background: #0b0d14; color: #fff; }
+<style>
+:root{
+    --bg-dark:#0a0b10;
+    --panel-bg:#141722;
+    --accent-neon:#00ff88;
+    --accent-blue:#00e5ff;
+    --text-main:#ffffff;
+}
 
-        /* Ponto de rutura crítico para telemóveis: evita sobreposição horizontal */
-        @media (max-width: 600px) {
-            .match-card {
-                flex-direction: column;
-                gap: 8px;
-                text-align: center;
-                padding: 12px;
-            }
-            .match-teams, .match-teams.away {
-                width: 100%;
-                justify-content: center;
-                text-align: center;
-            }
-        }
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:Segoe UI,Tahoma,sans-serif;
+}
 
-        /* Estrutura de Tabelas e Painéis */
-        .section-panel { background: var(--panel-bg); padding: 12px; border-radius: 10px; margin-bottom: 12px; border: 1px solid #2a3142; }
-        .table-wrapper { width: 100%; overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; min-width: 480px; }
-        th, td { padding: 8px 6px; text-align: center; border-bottom: 1px solid #2a3142; font-size: 0.75rem; }
-        th { background: #1e2333; color: var(--accent-neon); }
-        #standings-body tr:nth-child(-n+8) { border-left: 3px solid var(--accent-neon); background: rgba(0,255,136,0.03); }
-        
-        /* Utilitários de navegação */
-        .nav-tabs { display: flex; gap: 4px; margin-bottom: 12px; flex-wrap: wrap; }
-        .tab-btn { background: var(--panel-bg); border: 1px solid var(--accent-blue); color: #fff; padding: 8px; border-radius: 6px; flex: 1; font-size: 0.75rem; cursor: pointer; }
-        .tab-btn.active { background: var(--accent-blue); color: #000; font-weight: bold; }
-        .page { display: none; }
-        .page.active { display: block; }
-        .sub-panel { display: none; }
-        .sub-panel.active { display: block; }
-    </style>
+body{
+    background:var(--bg-dark);
+    color:var(--text-main);
+    padding:10px;
+}
+
+.container{
+    max-width:900px;
+    margin:auto;
+}
+
+header{
+    text-align:center;
+    margin-bottom:15px;
+}
+
+h1{
+    color:var(--accent-neon);
+}
+
+.section-panel{
+    background:var(--panel-bg);
+    padding:15px;
+    border-radius:10px;
+    margin-bottom:15px;
+    border:1px solid #2a3142;
+}
+
+.nav-tabs{
+    display:flex;
+    gap:8px;
+    margin-bottom:15px;
+}
+
+.tab-btn{
+    flex:1;
+    padding:10px;
+    border:none;
+    border-radius:6px;
+    background:#1e2333;
+    color:white;
+    cursor:pointer;
+}
+
+.tab-btn.active{
+    background:var(--accent-blue);
+    color:black;
+    font-weight:bold;
+}
+
+.page{
+    display:none;
+}
+
+.page.active{
+    display:block;
+}
+
+.table-wrapper{
+    overflow-x:auto;
+}
+
+table{
+    width:100%;
+    border-collapse:collapse;
+}
+
+th,td{
+    padding:8px;
+    border-bottom:1px solid #2a3142;
+    text-align:center;
+}
+
+th{
+    background:#1e2333;
+    color:var(--accent-neon);
+}
+
+#standings-body tr:nth-child(-n+8){
+    border-left:4px solid var(--accent-neon);
+}
+
+.match-card{
+    background:#1a1e2d;
+    padding:12px;
+    border-radius:10px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:10px;
+}
+
+.match-teams{
+    display:flex;
+    align-items:center;
+    gap:8px;
+}
+
+.match-teams.away{
+    flex-direction:row-reverse;
+}
+
+.team-logo{
+    width:24px;
+    height:24px;
+    border-radius:50%;
+}
+
+.score-box{
+    display:flex;
+    align-items:center;
+    gap:5px;
+}
+
+.score-input{
+    width:45px;
+    text-align:center;
+    padding:5px;
+    background:#0b0d14;
+    color:white;
+    border:1px solid #3a445d;
+    border-radius:5px;
+}
+
+@media(max-width:600px){
+    .match-card{
+        flex-direction:column;
+        text-align:center;
+    }
+}
+</style>
 </head>
+
 <body>
 
-    <header style="text-align: center; margin-bottom: 12px;">
-        <h1 style="color: var(--accent-neon); font-size: 1.2rem;">eFootball Manager</h1>
-    </header>
+<div class="container">
 
-    <div class="container" style="max-width: 800px; margin: 0 auto;">
-        
-        <!-- Navegação Principal -->
-        <div class="nav-tabs">
-            <button class="tab-btn active" onclick="switchTab('championship')">Competição</button>
+<header>
+    <h1>eFootball Manager</h1>
+</header>
+
+<div class="nav-tabs">
+    <button class="tab-btn active" onclick="switchTab('championship', this)">
+        Competição
+    </button>
+</div>
+
+<div id="page-championship" class="page active">
+
+    <div class="section-panel">
+        <h2>Tabela de Classificação</h2>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                <tr>
+                    <th>Pos</th>
+                    <th>Equipe</th>
+                    <th>J</th>
+                    <th>V</th>
+                    <th>E</th>
+                    <th>D</th>
+                    <th>GP</th>
+                    <th>GC</th>
+                    <th>SG</th>
+                    <th>Pts</th>
+                </tr>
+                </thead>
+
+                <tbody id="standings-body"></tbody>
+            </table>
         </div>
-
-        <!-- Secção Campeonato -->
-        <div id="page-championship" class="page active">
-            <div class="section-panel">
-                <h2 style="color: var(--accent-blue); font-size: 1rem; margin-bottom: 8px;">Tabela de Classificação (G8)</h2>
-                <div class="table-wrapper">
-                    <table>
-                        <thead>
-                            <tr><th>Pos</th><th>Equipa</th><th>J</th><th>V</th><th>E</th><th>D</th><th>GP</th><th>GC</th><th>SG</th><th>Pts</th><th>%</th></tr>
-                        </thead>
-                        <tbody id="standings-body">
-                            <!-- Preenchido via JS -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <div class="section-panel">
-                <h2 style="color: var(--accent-blue); font-size: 1rem; margin-bottom: 8px;">Exemplo de Card (Responsivo)</h2>
-                <!-- Exemplo prático da estrutura corrigida no mobile -->
-                <div class="match-card">
-                    <div class="match-teams"><img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24'><circle cx='12' cy='12' r='10' fill='%2300ff88'/></svg>" class="team-logo"><span>Flamengo</span></div>
-                    <div class="score-box">
-                        <input type="number" class="score-input" value="2"> x 
-                        <input type="number" class="score-input" value="1">
-                    </div>
-                    <div class="match-teams away"><span>Vasco</span><img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24'><circle cx='12' cy='12' r='10' fill='%2300e5ff'/></svg>" class="team-logo"></div>
-                </div>
-            </div>
-        </div>
-
     </div>
 
-    <script>
-        // Função simples de exemplo para alternar abas se necessário
-        function switchTab(tabId) {
-            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            document.getElementById(`page-${tabId}`).classList.add('active');
-        }
-    </script>
+    <div class="section-panel">
+        <h2>Partida</h2>
+
+        <div class="match-card">
+
+            <div class="match-teams">
+                <img class="team-logo"
+                     src="https://via.placeholder.com/24">
+                <span>Flamengo</span>
+            </div>
+
+            <div class="score-box">
+                <input type="number" class="score-input" value="2">
+                x
+                <input type="number" class="score-input" value="1">
+            </div>
+
+            <div class="match-teams away">
+                <img class="team-logo"
+                     src="https://via.placeholder.com/24">
+                <span>Vasco</span>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+</div>
+
+<script>
+
+const teams = [
+    {nome:"Flamengo", j:3, v:2, e:1, d:0, gp:8, gc:3},
+    {nome:"Vasco", j:3, v:2, e:0, d:1, gp:6, gc:4},
+    {nome:"Corinthians", j:3, v:1, e:1, d:1, gp:4, gc:4},
+    {nome:"Palmeiras", j:3, v:1, e:0, d:2, gp:3, gc:5}
+];
+
+function loadTable(){
+
+    const tbody = document.getElementById("standings-body");
+
+    tbody.innerHTML = "";
+
+    teams.forEach((team,index)=>{
+
+        const pts = team.v * 3 + team.e;
+        const sg = team.gp - team.gc;
+
+        tbody.innerHTML += `
+            <tr>
+                <td>${index+1}</td>
+                <td>${team.nome}</td>
+                <td>${team.j}</td>
+                <td>${team.v}</td>
+                <td>${team.e}</td>
+                <td>${team.d}</td>
+                <td>${team.gp}</td>
+                <td>${team.gc}</td>
+                <td>${sg}</td>
+                <td>${pts}</td>
+            </tr>
+        `;
+    });
+}
+
+function switchTab(tabId, button){
+
+    document.querySelectorAll(".page")
+        .forEach(page => page.classList.remove("active"));
+
+    document.querySelectorAll(".tab-btn")
+        .forEach(btn => btn.classList.remove("active"));
+
+    document.getElementById(`page-${tabId}`)
+        .classList.add("active");
+
+    button.classList.add("active");
+}
+
+loadTable();
+
+</script>
+
 </body>
 </html>
